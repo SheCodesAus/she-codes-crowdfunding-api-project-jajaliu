@@ -2,9 +2,9 @@ from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.status import HTTP_207_MULTI_STATUS
-from rest_framework import permissions
+from rest_framework import permissions, status
 from .models import CustomUser
-from .serializers import CustomUserSerializer
+from .serializers import CustomUserSerializer, CustomUserDetailSerializer 
 from .permissions import IsOwner
 
 
@@ -13,8 +13,14 @@ class CreateCustomUser(APIView):
         serializer = CustomUserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors)
+            return Response(
+                serializer.data,
+                status = status.HTTP_201_CREATED
+            )
+        return Response(
+            serializer.errors,
+            status = status.HTTP_400_BAD_REQUEST
+        )
 
 class CustomUserList(APIView):
 
@@ -40,5 +46,36 @@ class CustomUserDetail(APIView):
     
     def get(self, request, pk):
         user = self.get_object(pk)
-        serializer = CustomUserSerializer(user)
+        serializer = CustomUserDetailSerializer(user)
         return Response(serializer.data)
+
+    def put(self, request, pk):
+        user = self.get_object(pk)
+        data = request.data
+        serializer = CustomUserDetailSerializer(
+            instance = user,
+            data = data,
+            partial = True
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(
+            serializer.errors,
+            status = status.HTTP_400_BAD_REQUEST
+        )
+
+
+#def post(self, request):
+        # serializer = ProjectSerializer(data = request.data)
+        # if serializer.is_valid():
+        #     serializer.save(owner=request.user)
+        #     return Response(
+        #         serializer.data,
+        #         status = status.HTTP_201_CREATED
+        #     )
+        # return Response(
+        #     serializer.errors,
+        #     status = status.HTTP_400_BAD_REQUEST
+        # )

@@ -2,6 +2,8 @@ from rest_framework import serializers
 from .models import Project, Pledge
 
 class PledgeSerializer(serializers.ModelSerializer):
+    supporter = serializers.SerializerMethodField()
+
     class Meta:
         model = Pledge
         fields = ['id', 'amount', 'comment', 'anonymous', 'project', 'supporter']
@@ -9,6 +11,10 @@ class PledgeSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return Pledge.objects.create(**validated_data)
+
+    def get_supporter(self, obj):
+        if obj.anonymous == False:
+            return obj.supporter.username
 
 class ProjectSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
@@ -26,7 +32,18 @@ class ProjectSerializer(serializers.Serializer):
         return Project.objects.create(**validated_data)
 
 class ProjectDetailSerializer(ProjectSerializer):
+  
     pledges = PledgeSerializer(many = True, read_only = True)
+
+    # pledges = serializers.SerializerMethodField()
+
+  
+
+    # def get_pledges(self, obj):
+        
+    #     anon_pledge = PledgeSerializer(many = True, read_only = True)
+    #     if anon_pledge.anonymous == False:
+    #         return anon_pledge
 
     def update(self, instance, validated_data):
         instance.title = validated_data.get('title', instance.title)
